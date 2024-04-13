@@ -1,0 +1,358 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Login Page</title>
+  <style>
+    html {
+      height: 100%;
+    }
+    body {
+      margin: 0;
+      padding: 0;
+      font-family: sans-serif;
+      background: linear-gradient(#141e30, #243b55);
+    }
+
+    #container {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+    }
+
+    .login-box {
+      width: 400px;
+      padding: 40px;
+      background: rgba(0,0,0,.5);
+      box-sizing: border-box;
+      box-shadow: 0 15px 25px rgba(0,0,0,.6);
+      border-radius: 10px;
+      display: block;
+    }
+
+    .login-box h2 {
+      margin: 0 0 30px;
+      padding: 0;
+      color: #fff;
+      text-align: center;
+    }
+
+    .login-box .user-box {
+      position: relative;
+    }
+
+    .login-box .user-box input {
+      width: 100%;
+      padding: 10px 0;
+      font-size: 16px;
+      color: #fff;
+      margin-bottom: 30px;
+      border: none;
+      border-bottom: 1px solid #fff;
+      outline: none;
+      background: transparent;
+    }
+
+    .login-box .user-box label {
+      position: absolute;
+      top: 0;
+      left: 0;
+      padding: 10px 0;
+      font-size: 16px;
+      color: #fff;
+      pointer-events: none;
+      transition: .5s;
+    }
+
+    .login-box .user-box input:focus ~ label,
+    .login-box .user-box input:valid ~ label {
+      top: -20px;
+      left: 0;
+      color: #03e9f4;
+      font-size: 12px;
+    }
+
+    .login-box form button {
+      display: block;
+      margin: 0 auto;
+      padding: 10px 20px;
+      color: #03e9f4;
+      font-size: 16px;
+      text-decoration: none;
+      text-transform: uppercase;
+      background: transparent;
+      border: 2px solid #03e9f4;
+      border-radius: 5px;
+      cursor: pointer;
+      transition: 0.5s;
+    }
+
+    .login-box form button:hover {
+      background: #03e9f4;
+      color: #fff;
+    }
+
+    #content-container {
+      display: none;
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      flex-direction: column;
+      align-items: center;
+    }
+
+    #content-container.show {
+      display: block;
+    }
+
+  </style>
+</head>
+<body>
+  
+  <div id="container">
+    <div class="login-box">
+      <h2>Login</h2>
+      <form id="loginForm">
+        <div class="user-box">
+          <input type="text" id="username" required>
+          <label>Username</label>
+        </div>
+        <div class="user-box">
+          <input type="password" id="password" required>
+          <label>Password</label>
+        </div>
+        <button type="submit">Submit</button>
+      </form>
+    </div>
+  </div>
+
+  <div id="content-container">
+    <h1 style="text-align: center;">Node.js Console</h1>
+
+    <div id="console"></div>
+
+    <form id="commandForm">
+      <input type="text" id="commandInput" autocomplete="off" placeholder="Nhập lệnh...">
+      <button type="submit">Gửi</button>
+    </form>
+
+    <hr>
+
+    <h2>Chỉnh sửa File</h2>
+    <label for="directorySelect">Chọn thư mục:</label>
+    <select id="directorySelect"></select>
+    <br>
+    <label for="fileSelect">Chọn tệp tin:</label>
+    <select id="fileSelect"></select>
+    <br>
+    <label for="fileContentInput">Nội dung tệp tin:</label>
+    <textarea id="fileContentInput" rows="10" placeholder="Nhập nội dung..."></textarea>
+    <br>
+    <button id="editFileButton">Chỉnh sửa File</button>
+  </div>
+
+  <script>
+    document.addEventListener('DOMContentLoaded', async () => {
+      const directorySelect = document.getElementById('directorySelect');
+      const fileSelect = document.getElementById('fileSelect');
+      const fileContentInput = document.getElementById('fileContentInput');
+      const commandInput = document.getElementById('commandInput');
+      const loginForm = document.getElementById('loginForm');
+      const loginBox = document.querySelector('.login-box');
+      const contentContainer = document.getElementById('content-container');
+
+      loginForm.addEventListener('submit', async (event) => {
+        event.preventDefault();
+
+        const username = document.getElementById('username').value;
+        const password = document.getElementById('password').value;
+        // Perform authentication here (You can use AJAX or fetch API)
+        // For demonstration, let's assume authentication is successful
+        const isAuthenticated = true;
+
+        if (isAuthenticated) {
+          loginForm.reset();
+          loginBox.style.display = 'none';
+          contentContainer.classList.add('show');
+          await fetchDirectories();
+        } else {
+          alert('Login failed. Please check your username and password.');
+        }
+      });
+
+      directorySelect.addEventListener('change', async () => {
+        const directoryName = directorySelect.value;
+        await fetchFiles(directoryName);
+      });
+
+      fileSelect.addEventListener('change', async () => {
+        const fileName = fileSelect.value;
+        await fetchFileContent(fileName);
+      });
+
+      document.getElementById('editFileButton').addEventListener('click', async () => {
+        const fileName = fileSelect.value;
+        const content = fileContentInput.value.trim();
+
+        try {
+          const response = await fetch('/editFile', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ fileName, content })
+          });
+
+          const data = await response.json();
+          console.log(data);
+          alert(data.message); // Hiển thị thông báo cho người dùng
+        } catch (error) {
+          console.error('Lỗi:', error);
+        }
+
+        // Xóa các giá trị đã nhập sau khi hoàn thành
+        fileContentInput.value = '';
+      });
+
+      document.getElementById('commandForm').addEventListener('submit', async (event) => {
+        event.preventDefault(); // Ngăn chặn hành vi mặc định của form
+
+        const command = commandInput.value.trim();
+
+        try {
+          const response = await fetch('/command', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ command })
+          });
+
+          const data = await response.json();
+          console.log(data);
+
+          const consoleOutputDiv = document.getElementById('console');
+          consoleOutputDiv.innerHTML = ''; // Xóa nội dung hiện tại của console
+          data.consoleOutput.forEach(line => {
+            const lineElement = document.createElement('div');
+            lineElement.innerHTML = `<a href="#" class="console-link">${line}</a>`;
+            consoleOutputDiv.appendChild(lineElement);
+          });
+
+          // Thêm sự kiện cho các liên kết console
+          document.querySelectorAll('.console-link').forEach(link => {
+            link.addEventListener('click', (e) => {
+              e.preventDefault();
+              commandInput.value = e.target.innerText; // Set giá trị lệnh vào input
+            });
+          });
+
+        } catch (error) {
+          console.error('Lỗi:', error);
+        }
+
+        // Xóa giá trị đã nhập sau khi hoàn thành
+        commandInput.value = '';
+      });
+
+      async function fetchDirectories() {
+        try {
+          const response = await fetch('/files');
+          const data = await response.json();
+
+          directorySelect.innerHTML = ''; // Xóa tất cả các option cũ
+          const directories = data.files.filter(file => file.type === 'directory');
+          const files = data.files.filter(file => file.type === 'file');
+
+          directories.forEach(directory => {
+            const option = document.createElement('option');
+            option.textContent = directory.name;
+            option.value = directory.name;
+            directorySelect.appendChild(option);
+          });
+
+          files.forEach(file => {
+            const option = document.createElement('option');
+            option.textContent = file.name;
+            option.value = file.name;
+            fileSelect.appendChild(option);
+          });
+        } catch (error) {
+          console.error('Lỗi:', error);
+        }
+      }
+
+      async function fetchFiles(directoryName) {
+        fileSelect.innerHTML = ''; // Xóa tất cả các option cũ
+        await fetchDirectories();
+      }
+
+      async function fetchFileContent(fileName) {
+        try {
+          const response = await fetch(`/file/${fileName}`);
+          const data = await response.json();
+          fileContentInput.value = data.content;
+        } catch (error) {
+          console.error('Lỗi:', error);
+        }
+      }
+
+      // Load danh sách thư mục khi trang được tải
+      fetchDirectories();
+    });
+  </script>
+  <script>
+    document.addEventListener('DOMContentLoaded', async () => {
+      const USERNAME = 'admin';
+      const PASSWORD = '180608';
+
+      const loginForm = document.getElementById('loginForm');
+      const loginBox = document.querySelector('.login-box');
+      const contentContainer = document.getElementById('content-container');
+
+      let isAuthenticated = true; // Biến để kiểm tra xem người dùng đã xác thực thành công hay chưa
+
+      loginForm.addEventListener('submit', async (event) => {
+        event.preventDefault();
+
+        let username = document.getElementById('username').value;
+        let password = document.getElementById('password').value;
+
+        // Kiểm tra xác thực
+        if (username === USERNAME && password === PASSWORD) {
+          isAuthenticated = true;
+        }
+
+        // Yêu cầu người dùng nhập lại nếu xác thực không thành công
+        while (!isAuthenticated) {
+          if (!confirm('Tên đăng nhập hoặc mật khẩu không chính xác. Bạn có muốn nhập lại không?')) {
+            loginForm.reset(); // Đặt lại biểu mẫu đăng nhập để người dùng có thể nhập lại
+            return; // Nếu người dùng nhấn "Cancel", thoát khỏi hàm
+          }
+
+          username = prompt('Nhập lại tên đăng nhập:');
+          password = prompt('Nhập lại mật khẩu:');
+
+          // Kiểm tra xác thực lại
+          if (username === USERNAME && password === PASSWORD) {
+            isAuthenticated = true;
+          }
+        }
+
+        // Nếu xác thực thành công
+        loginForm.reset();
+        loginBox.style.display = 'none';
+        contentContainer.classList.add('show');
+        await fetchDirectories(); // Bạn cần định nghĩa hàm này
+      });
+
+      // Các logic khác...
+    });
+  </script>
+
+
+</body>
+</html>
