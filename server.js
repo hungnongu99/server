@@ -31,10 +31,9 @@ app.post('/command', (req, res) => {
     const result = stdout || stderr;
     consoleOutput.push(result);
 
-    // Gửi kết quả về cho trình duyệt
+    
     res.json({ consoleOutput });
 
-    // In kết quả ra console của máy chủ
     console.log(`Command output (server): ${result}`);
   });
 });
